@@ -8,7 +8,7 @@ import time
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 HOST = socket.gethostname()
-PORT = 8002
+PORT = 17128
 isLoggedIn = 0
 sock.bind((HOST,PORT))
 sock.listen(3)
@@ -63,7 +63,7 @@ while True:
 
     if(commandWord == "login"):
         if(isLoggedIn !=0):
-            data = "Server: " + newUsername + " is already logged in!"
+            data = newUsername + " is already logged in!"
         else:
             try:
                 newUsername = data.split(" ")[1]
@@ -75,7 +75,7 @@ while True:
                         if newUsername in line:
                             if newPassword in line:
                                 print(newUsername + " login")
-                                data = "Server: " + newUsername + " joins"
+                                data = newUsername + " joined"
                                 isLoggedIn = 1
             except:
                 data = "Login failed. Please check username and password."
@@ -86,9 +86,9 @@ while True:
     elif(commandWord == "send"):
 
         if(isLoggedIn == 0):
-            data = "Server: Denied. Please Login First"
+            data = "Denied. Please Login First"
 
-        elif(data.split(" ")[1] > 256):
+        elif(len(data.split(" ")[1]) > 256):
             data = "Message to log. Must be less than 256 characters"
 
         else:
@@ -101,7 +101,7 @@ while True:
         users = read_users()
 
         if(isLoggedIn):
-            conn.send("Cannot create new user while logged  in.".encode())
+            conn.send("Cannot create new user while logged in.".encode())
             continue
 
         if new_user(users, data.split(" ")[1], data.split(" ")[2]):
@@ -113,7 +113,7 @@ while True:
 
         else:
 
-            conn.send("Denied. User account already exists.".encode())
+            conn.send("User account already exists.".encode())
             continue
 
 
@@ -125,22 +125,18 @@ while True:
 
         else:
             print(newUsername + " logout")
-            data = "Server: " + newUsername + " left."
+            data = newUsername + " left."
             conn.send(data.encode())
             isLoggedIn = isLoggedIn - 1
 
     else:
         print("Couldn't read input")
-        data = "Server: couldn't read input"
+        data = "ERROR: Couldn't read input"
         conn.send(data.encode())
 
     if not data:
         break
 
 
-print("")
-print("Client has disconnected!")
+
 conn.close()
-print("")
-print("Exiting server...")
-print("")

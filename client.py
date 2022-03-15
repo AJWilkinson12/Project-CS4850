@@ -7,7 +7,7 @@ import time
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 host = socket.gethostname()
-port = 8002
+port = 17128
 connections = 0
 loginFlag = 0
 print("")
