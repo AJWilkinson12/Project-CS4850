@@ -6,7 +6,7 @@ from threading import Thread
 from time import sleep
 
 HOST = "127.0.0.1"  # The server's hostname or IP address
-PORT = 16141 # The port used by the server
+PORT = 17129 # The port used by the server
 
 
 #Thread that constantly listens for incoming data for the server. Prints when received.  If stop_threads is set to true from main loop or is informed that server is at max capacity, stop listenting and return. 
