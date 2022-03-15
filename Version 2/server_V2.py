@@ -7,7 +7,7 @@ from time import sleep
 from threading import Thread
 
 HOST = "127.0.0.1"
-PORT = 17123
+PORT = 17120
 MAXCLIENTS = 3
 connectedUsers = {}
 
@@ -69,7 +69,7 @@ def admin(conn, addr):
                         conn.send((activeUsers + " joins.").encode())
 
                     print(activeUsers + " logged in.")
-                    conn.send("login confirmed".encode())
+                    conn.send("login successfull!\n".encode())
                     continue
 
                 else:
@@ -142,25 +142,25 @@ def admin(conn, addr):
         elif commandWord[0] == "logout":
             
             global active_threads
-            if(not isLoggedIn):
+            if(isLoggedIn == False):
                 conn.send("Must be logged in to log out!".encode())
                 continue
 
             isLoggedIn = False
 
-            print(activeUsers + " log out.")
+            print(activeUsers + " logged out.")
 
             for userID, conn in connectedUsers.items():
                 if(userID == activeUsers):
                     continue
 
-                conn.send((activeUsers + message).encode())
+                conn.send((activeUsers + " Logged out").encode())
 
-            conn.send("Successfully logged out.".encode())
+            conn.send("Successfully logged out.\n".encode())
             active_threads -= 1
             connectedUsers.pop(activeUsers)
 
-            sleep(1)
+            sleep(2)
 
             conn.close()
             activeUsers = ""
