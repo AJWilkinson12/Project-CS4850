@@ -4,9 +4,8 @@
 import socket
 from threading import Thread
 from time import sleep
-from server_V2 import PORT
+from server_V2 import PORT, HOST
 
-HOST = "127.0.0.1"
 
 
 def listen_for_server(s):
