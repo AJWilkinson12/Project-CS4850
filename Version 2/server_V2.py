@@ -7,7 +7,7 @@ from time import sleep
 from threading import Thread
 
 HOST = "127.0.0.1"
-PORT = 17129
+PORT = 17123
 MAXCLIENTS = 3
 connectedUsers = {}
 
@@ -107,8 +107,8 @@ def admin(conn, addr):
                     for userID, conn in connectedUsers.items():
                         if(userID == activeUsers):
                             continue
-                        conn.send((activeUsers + ": " + message).encode())
-                    print(activeUsers + ": " + message)
+                        conn.send((activeUsers + ">> " + message).encode())
+                    print(activeUsers + ">> " + message)
                     continue
 
                 elif commandWord[1] in connectedUsers:

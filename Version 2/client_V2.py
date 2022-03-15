@@ -23,6 +23,7 @@ def listen_for_server(s):
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
 
+    print("")
     print("YOU'RE CONNECTED")
     print("")
     print("")
@@ -51,7 +52,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             if len(command) != 3:
                 print("Invalid command. Format is login Username Password")
                 continue
-
+            
             s.send(send.encode())
 
         elif command[0] == "newuser":
