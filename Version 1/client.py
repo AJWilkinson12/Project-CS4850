@@ -7,7 +7,7 @@ import time
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 host = socket.gethostname()
-port = 17128
+port = 17120
 connections = 0
 loginFlag = 0
 print("")
@@ -60,6 +60,8 @@ while(True):
             print(message)
             break
         print(message)
+        break
 
 
 sock.close()
+        
