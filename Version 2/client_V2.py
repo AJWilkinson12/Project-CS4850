@@ -53,6 +53,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 print("Invalid command. Format is login Username Password")
                 continue
             
+            isLoggedIn = True
             s.send(send.encode())
 
         elif command[0] == "newuser":

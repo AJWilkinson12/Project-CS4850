@@ -145,25 +145,25 @@ def admin(conn, addr):
             if(isLoggedIn == False):
                 conn.send("Must be logged in to log out!".encode())
                 continue
+            
+            else:
+                isLoggedIn = False
 
-            isLoggedIn = False
+                print(activeUsers + " logged out.")
+                for userID, conn in connectedUsers.items():
+                    if(userID == activeUsers):
+                        continue
 
-            print(activeUsers + " logged out.")
+                    conn.send((activeUsers + " Logged out").encode())
 
-            for userID, conn in connectedUsers.items():
-                if(userID == activeUsers):
-                    continue
+                    conn.send("Successfully logged out.\n".encode())
+                    active_threads -= 1
+                    connectedUsers.pop(activeUsers)
 
-                conn.send((activeUsers + " Logged out").encode())
+                    sleep(2)
 
-            conn.send("Successfully logged out.\n".encode())
-            active_threads -= 1
-            connectedUsers.pop(activeUsers)
-
-            sleep(2)
-
-            conn.close()
-            activeUsers = ""
+                    conn.close()
+                    activeUsers = ""
             return
             
                        
