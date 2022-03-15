@@ -7,7 +7,7 @@ import sys
 import time
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-HOST = socket.getHOSTname()
+HOST = socket.gethostname()
 PORT = 8002
 isLoggedIn = 0
 sock.bind((HOST,PORT))
