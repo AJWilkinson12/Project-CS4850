@@ -23,33 +23,37 @@ print("")
 
 
 def read_users():
+
     with open("users.txt") as f:
         users = f.readlines()
+
     f.close()
     return users
 
-def new_user(users, c_uid, c_pass):
-    if check_match(users, c_uid, c_pass):
+def new_user(users, user_id, password):
+
+    if check_match(users, user_id, password):
         return False
+
     else:
-        update_users(c_uid, c_pass)
+        update_users(user_id, password)
         return True
 
-def check_match(users, c_uid, c_pass):
+def check_match(users, user_id, password):
+
     for user in users:
-        #Stripping each registered users extra characters
         user = re.sub("[()]", "", user);
-        registered_u = user.split(", ")
-        registered_u[1] = registered_u[1].replace("\n", "")
-        #Check if current check variables match.
-        if registered_u[0] == c_uid and registered_u[1] == c_pass:
+        existing_User = user.split(", ")
+        existing_User[1] = existing_User[1].replace("\n", "")
+        if existing_User[0] == user_id and existing_User[1] == password:
             return True
 
-def update_users(c_uid, c_pass):
-    new_user = "("+c_uid+", "+c_pass+")"
+def update_users(user_id, password):
+
+    new_user_info = "("+user_id+", "+password+")"
     with open("users.txt", "a") as f:
         f.write("\n")
-        f.write(new_user)
+        f.write(new_user_info)
     f.close()
 
 
@@ -80,32 +84,45 @@ while True:
         conn.send(data.encode())
 
     elif(commandWord == "send"):
+
         if(isLoggedIn == 0):
             data = "Server: Denied. Please Login First"
+
+        elif(data.split(" ")[1] > 256):
+            data = "Message to log. Must be less than 256 characters"
+
         else:
             data = newUsername + ": " + data[5:]
             print (newUsername + " " + data[5:])
+
         conn.send(data.encode())
 
     elif(commandWord == "newuser"):
         users = read_users()
+
         if(isLoggedIn):
             conn.send("Cannot create new user while logged  in.".encode())
             continue
+
         if new_user(users, data.split(" ")[1], data.split(" ")[2]):
+
             print("New user created.")
             users = read_users()
             conn.send("New user account created. Please login.".encode())
             continue
+
         else:
+
             conn.send("Denied. User account already exists.".encode())
             continue
 
 
     elif(commandWord == "logout"):
+
         if(isLoggedIn == 0):
             data = "You're not logged in"
             conn.send(data.encode())
+
         else:
             print(newUsername + " logout")
             data = "Server: " + newUsername + " left."
