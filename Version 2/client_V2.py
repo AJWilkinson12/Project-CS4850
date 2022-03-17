@@ -8,15 +8,19 @@ from server_V2 import PORT, HOST
 
 
 
-def listen_for_server(s):
+def listener(s):
     global threads
     while True:
-        data = s.recv(1024).decode()
-        print(data)
-        if(data == "Sorry. Max active users has been reached."):
-            return
-        if threads:
-            return
+        try:
+            data = s.recv(1024).decode()
+            print(data)
+            if(data == "Sorry. Max active users has been reached."):
+                return
+            if threads:
+                return
+        except:
+            pass
+            
        
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -39,7 +43,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
     isLoggedIn = False
     threads = False
-    th = Thread(target = listen_for_server,args = [s])
+    th = Thread(target = listener,args = [s])
     th.daemon
     th.start()
 

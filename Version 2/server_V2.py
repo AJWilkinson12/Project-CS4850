@@ -7,7 +7,7 @@ from time import sleep
 from threading import Thread
 
 HOST = "127.0.0.1"
-PORT = 17120
+PORT = 17122
 MAXCLIENTS = 3
 connectedUsers = {}
 
@@ -119,11 +119,11 @@ def admin(conn, addr):
                     continue
 
                 else:
-                    conn.send("Error sending message.  Either user wasn't online or all wasn't specified.".encode())
+                    conn.send("ERROR: User isn't online or inputs invalid".encode())
                     continue
 
             else:
-                conn.send("Error on send, a user or all must be specified after 'send' commandWord.".encode())
+                conn.send("ERROR: Invalid input".encode())
                 continue
 
         elif commandWord[0] == "who":
@@ -160,7 +160,7 @@ def admin(conn, addr):
                     active_threads -= 1
                     connectedUsers.pop(activeUsers)
 
-                    sleep(2)
+                    sleep(3)
 
                     conn.close()
                     activeUsers = ""
