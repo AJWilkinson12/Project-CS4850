@@ -6,14 +6,14 @@ import sys
 import time
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host = socket.gethostname()
-port = 17120
+HOST = "127.0.0.1"
+PORT = 17129
 connections = 0
 loginFlag = 0
 print("")
 while connections == 0:
     try:
-        sock.connect((host, port))
+        sock.connect((HOST, PORT))
         connections = connections + 1
     except:
         pass
@@ -60,8 +60,6 @@ while(True):
             print(message)
             break
         print(message)
-        break
 
 
 sock.close()
-        
