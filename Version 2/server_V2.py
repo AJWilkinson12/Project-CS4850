@@ -1,4 +1,5 @@
 #Created by AJ Wilkinson
+# March 17th, 2022
 #PawPrint: ASWD62  StudentID: 14307129
 
 import socket
@@ -6,183 +7,226 @@ import re
 from time import sleep
 from threading import Thread
 
+#Rquired information for the server to connect to the client.
 HOST = "127.0.0.1"
-PORT = 17122
+PORT = 17129
+#Sets the amount of allowed clients to connect to the server
 MAXCLIENTS = 3
-connectedUsers = {}
+#Stores the current clients connected for easier access for later use.
+current_clients = {}
 
-def login(users, user_id, user_pass):
-        if(user_id in connectedUsers.keys()):
+#Logs in a user from their client. Allowing them to send messages.
+def login_User(users, check_UserID, check_UserPass):
+
+        if(check_UserID in current_clients.keys()):
             return None
-        if check_file(users, user_id, user_pass):
-            return user_id
+
+        if check_Users(users, check_UserID, check_UserPass):
+            return check_UserID
+
         else:
             return None
 
-def check_file(users, user_ID, password):
+#Function to assist in the creation of a new user account.
+def new_user(users, user_ID, user_Pass):
+    if check_Users(users, user_ID, user_Pass):
+        return False
+    else:
+        update_File(user_ID, user_Pass)
+        return True
+
+#Will send a message sent by another client to all active clients
+def send_Message(current_user, sent):
+    for userID, client in current_clients.items():
+        if(userID == current_user):
+            continue
+        client.send((current_user + ": " + sent).encode())
+    return
+
+#Find the active users within the server and returns it the client requesting said information.
+def whoIsHere():
+    sent = ""
+    uids = list(current_clients.keys())
+    for userID in current_clients:
+        if userID == uids[-1]:
+            sent += userID
+        else:
+            sent += userID +", "
+    return sent
+
+#Updates the user file
+def update_File(user_ID, user_Pass):
+    new_user = "("+user_ID+", "+user_Pass+")"
+
+    with open("users.txt", "a") as fp:
+        fp.write("\n")
+        fp.write(new_user)
+
+    fp.close()
+
+#Will check to see if a client trying to login is already logged in or if there is an existing user when trying to create a new user.
+def check_Users(users, user_ID, user_Pass):
     for user in users:
+        #Stripping each registered users extra characters
         user = re.sub("[()]", "", user)
-        registered_user = user.split(", ")
-        registered_user[1] = registered_user[1].replace("\n", "")
-        if registered_user[0] == user_ID and registered_user[1] == password:
+        registered_u = user.split(", ")
+        registered_u[1] = registered_u[1].replace("\n", "")
+        #Check if current check variables match.
+        if registered_u[0] == user_ID and registered_u[1] == user_Pass:
             return True
         
-def new_user(users, user_ID, password):
-    if check_file(users, user_ID, password):
-        return False
+#Will send a message to the current users that another user decided to logout.
+def inform_Logout(current_user, sent):
+    for userID, client in current_clients.items():
+        if(userID == current_user):
+            continue
+        client.send((current_user + sent).encode())
+    return
 
-    else:
-        new_user = "("+user_ID+", "+password+")"
-        with open("users.txt", "a") as fp:
-            fp.write("\n")
-            fp.write(new_user)
-        fp.close()
-        return True   
+#Will send a message to the current users that another user decided to login.
+def inform_Login(current_user):
+    for userID, client in current_clients.items():
+        if(userID == current_user):
+            continue
+        client.send((current_user + " joins.").encode())
+    return
 
-def admin(conn, addr):
-    isLoggedIn = False
-    activeUsers = ""
-
+#Reads the 'users' file and sees which users are registerd.
+def readFile():
     with open("users.txt") as fp:
         users = fp.readlines()
     fp.close()
+    return users
+    
+#Central control that handels all the other various logic. This was needed as when all crammed together it would crash.
+def ADMIN(client, address):
+    isLoggedIn = False
+    current_user = ""
+
+    users = readFile()
     
 
     while True:
-        data = conn.recv(1024).decode()
-        commandWord = data.split(" ")
-        if commandWord[0] == "login":
 
-            if(isLoggedIn):
-                conn.send("Already logged in.".encode())
-                continue
+        try:
+            
+            data = client.recv(1024).decode()
+            commandWord = data.split(" ")
+            
+            #Login function so that an existing user may login and send messages.
+            if commandWord[0] == "login":
 
-            else:
-                activeUsers = login(users, commandWord[1], commandWord[2])
-                if activeUsers is not None:
-                    connectedUsers[activeUsers] = conn
+                if(isLoggedIn):
+                    client.send("Already logged in.".encode())
+                    continue
+
+                current_user = login_User(users, commandWord[1], commandWord[2])
+
+                if current_user is not None:
+                    current_clients[current_user] = client
                     isLoggedIn = True
-                    for userID, conn in connectedUsers.items():
-                        if(userID == activeUsers):
-                            continue
+                    inform_Login(current_user)
+                    print(current_user + " logged in.")
+                    client.send("Login was a success!".encode())
+                    continue
+                
+                else:
+                    client.send("ERROR: USER OR PASS INCORRECT OR USER IS ALREADY ACTIVE".encode())
+                    continue
+                
+            #New User function to create a new user account
+            elif commandWord[0] == "newuser":
 
-                        conn.send((activeUsers + " joins.").encode())
+                if(isLoggedIn):
+                    client.send("Cannot create new user while logged  in.".encode())
+                    continue
 
-                    print(activeUsers + " logged in.")
-                    conn.send("login successfull!\n".encode())
+                if new_user(users, commandWord[1], commandWord[2]):
+                    print("New user created.")
+                    users = readFile()
+                    client.send("New user account created. Please login.".encode())
                     continue
 
                 else:
-                    conn.send("ERROR: Username or Password incorrect or the user is already logged in.".encode())
+                    client.send("ERROR: USER MUST ALREADY EXIST.".encode())
                     continue
-            
-        elif commandWord[0] == "newuser":
+                        
 
-            if(isLoggedIn):
-                conn.send("Cannot create new user while logged  in.".encode())
-                continue
-
-            if new_user(users, commandWord[1], commandWord[2]):
-                print("New user created.")
-                with open("users.txt") as fp:
-                    users = fp.readlines()
-                fp.close()
-                conn.send("New user account created. Please login.".encode())
-                continue
-
-            else:
-                conn.send("ERROR: User account exists.".encode())
-                continue
-                      
-                            
-        elif commandWord[0] == "send":
-
-            if(not isLoggedIn):
-                conn.send("ERROR: You must be logged in to use the send a message".encode())
-                continue
-
-            if len(commandWord) > 1:
-                if commandWord[1] == "all":
-                    message = data.split(' ', 2)[2]
-                    for userID, conn in connectedUsers.items():
-                        if(userID == activeUsers):
-                            continue
-                        conn.send((activeUsers + ">> " + message).encode())
-                    print(activeUsers + ">> " + message)
+            #Send function to send the message to others                
+            elif commandWord[0] == "send":
+                if(not isLoggedIn):
+                    client.send("ERROR: YOU MUST BE LOGGED IN TO SEND A MESSAGE".encode())
                     continue
 
-                elif commandWord[1] in connectedUsers:
-
-                    message = data.split(' ', 2)[2]
-                    connectedUsers[commandWord[1]].send((activeUsers + ": " + message).encode())
-                    print(activeUsers + "(to " + commandWord[1] + "): " + message)
-                    continue
-
-                else:
-                    conn.send("ERROR: User isn't online or inputs invalid".encode())
-                    continue
-
-            else:
-                conn.send("ERROR: Invalid input".encode())
-                continue
-
-        elif commandWord[0] == "who":
-            message = ""
-            user_IDs = list(connectedUsers.keys())
-            for userID in connectedUsers:
-
-                if userID == user_IDs[-1]:
-                    message += userID
-
-                else:
-                    message += userID +", "
-
-            conn.send(message.encode())
-                    
-        elif commandWord[0] == "logout":
-            
-            global active_threads
-            if(isLoggedIn == False):
-                conn.send("Must be logged in to log out!".encode())
-                continue
-            
-            else:
-                isLoggedIn = False
-
-                print(activeUsers + " logged out.")
-                for userID, conn in connectedUsers.items():
-                    if(userID == activeUsers):
+                if len(commandWord) > 1:
+                    if commandWord[1] == "all":
+                        sent = data.split(' ', 2)[2]
+                        send_Message(current_user, sent)
+                        print(current_user + ": " + sent)
                         continue
 
-                    conn.send((activeUsers + " Logged out").encode())
+                    elif commandWord[1] in current_clients:
+                        sent = data.split(' ', 2)[2]
+                        current_clients[commandWord[1]].send((current_user + ": " + sent).encode())
+                        print(current_user + "(to " + commandWord[1] + "): " + sent)
+                        continue
 
-                    conn.send("Successfully logged out.\n".encode())
-                    active_threads -= 1
-                    connectedUsers.pop(activeUsers)
+                    else:
+                        client.send("Error sending sent.  Either user wasn't online or all wasn't specified.".encode())
+                        continue
 
-                    sleep(3)
+                else:
+                    client.send("Error on send, a user or all must be specified after 'send' commandWord.".encode())
+                    continue
 
-                    conn.close()
-                    activeUsers = ""
-            return
-            
-                       
+            elif commandWord[0] == "who":
+                current_users = whoIsHere()
+                client.send(current_users.encode())
+                        
+            elif commandWord[0] == "logout":
+                global threads_connected
+
+                if(isLoggedIn == False):
+                    client.send("Must be logged in to log out!".encode())
+                    continue
+
+                isLoggedIn = False
+                print(current_user + " logged out.")
+                inform_Logout(current_user, " logged off.")
+                client.send("Logout was a success!".encode())
+                threads_connected -= 1
+                current_clients.pop(current_user)
+
+                sleep(2)
+
+                client.close()
+                current_user = ""
+
+                return
+        except:
+            pass
+
+#Main function that listens for connections. Will only allow up to 3 connections as that is what the MAXCLIENTS variable is set to.
+#  If more are wanted then that variables value must be increased manually.                      
 if __name__ == "__main__":
-    
-    print("Waiting for connections...")
-    active_threads = 0
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((HOST, PORT))
+
+    print("Waiting for connections...\n")
+    threads_connected = 0
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+        server.bind((HOST, PORT))
 
         while True:
-            s.listen()
-            conn, addr = s.accept()
+            server.listen()
+            client, address = server.accept()
 
-            if active_threads < MAXCLIENTS:
-                print("A client connected!")
-                active_threads +=1
-                Thread(target = admin,args = (conn,addr)).start()
+            if threads_connected < MAXCLIENTS:
+                threads_connected +=1
+                print("A Client connected!")
+                Thread(target = ADMIN,args = (client,address)).start()
 
             else:
-                conn.send("Sorry. Max active users has been reached. Please logout and try again later".encode())
-                conn.close()
+                print("One to many clients tried to connect.")
+                client.send("SERVER AT MAX CAPACITY".encode())
+                sleep(1)
+                client.close()

@@ -1,10 +1,12 @@
 #Created by AJ Wilkinson
+# March 17th, 2022
 #PawPrint: ASWD62  StudentID: 14307129
 
 import socket
 import sys
 import time
 
+# Needed variables to cnnnect to the server.
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 HOST = "127.0.0.1"
 PORT = 17129
@@ -13,11 +15,14 @@ loginFlag = 0
 print("")
 while connections == 0:
     try:
+        #Connects to the server/
         sock.connect((HOST, PORT))
         connections = connections + 1
     except:
         pass
 
+
+#List of functions.
 print("YOU'RE CONNECTED")
 print("")
 print("")
@@ -49,6 +54,7 @@ while(True):
 
         print(message)
 
+    # Let's the program know th user is logged in.
     if(loginFlag == 1):
         message = input(newUsername+">> ")
         sock.send(message.encode())
@@ -61,5 +67,5 @@ while(True):
             break
         print(message)
 
-
+#Disconnects from the server.
 sock.close()

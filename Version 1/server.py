@@ -1,4 +1,5 @@
 #Created by AJ Wilkinson
+# March 17, 2022
 #PawPrint: ASWD62  StudentID: 14307129
 
 import socket
@@ -6,6 +7,8 @@ import re
 import sys
 import time
 
+
+#Needed Variables in order to connect to client.
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 HOST = "127.0.0.1"
 PORT = 17129
@@ -17,11 +20,13 @@ print ("Waiting for connection...")
 
 conn, addr = sock.accept() #accepts connects from anyone
 
+#Let's us know when a client connects.
 print("")
 print("A client has connected!")
 print("")
 
 
+#Reads the 'users' file.
 def read_users():
 
     with open("users.txt") as f:
@@ -30,6 +35,7 @@ def read_users():
     f.close()
     return users
 
+#Checks to see if the user exists if not updates the file.
 def new_user(users, user_id, password):
 
     if check_file(users, user_id, password):
@@ -39,6 +45,7 @@ def new_user(users, user_id, password):
         update_file(user_id, password)
         return True
 
+#Checks the users file
 def check_file(users, user_id, password):
 
     for user in users:
@@ -48,6 +55,7 @@ def check_file(users, user_id, password):
         if existing_User[0] == user_id and existing_User[1] == password:
             return True
 
+#Updates Users file
 def update_file(user_id, password):
 
     new_user_info = "("+user_id+", "+password+")"
@@ -83,6 +91,7 @@ while True:
                 f.close()
         conn.send(data.encode())
 
+    #Send Function.
     elif(commandWord == "send"):
 
         if(isLoggedIn == 0):
@@ -97,6 +106,7 @@ while True:
 
         conn.send(data.encode())
 
+    #New User function.
     elif(commandWord == "newuser"):
         users = read_users()
 
@@ -116,7 +126,7 @@ while True:
             conn.send("User account already exists.".encode())
             continue
 
-
+    #Logout function
     elif(commandWord == "logout"):
 
         if(isLoggedIn == 0):
@@ -128,6 +138,8 @@ while True:
             data = newUsername + " left."
             conn.send(data.encode())
             isLoggedIn = isLoggedIn - 1
+    
+    #In case the input could not be read or was not a valid command.
 
     else:
         print("Couldn't read input")
